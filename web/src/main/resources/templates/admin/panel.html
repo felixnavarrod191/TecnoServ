@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Panel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 page-title mb-0">Panel del administrador</h1>
+    <form th:action="@{/admin/demo}" method="post" class="m-0">
+      <button type="submit" class="btn btn-outline-secondary btn-sm">Cargar datos de demostración</button>
+    </form>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card stat"><div class="text-muted small">Órdenes</div><div class="num" th:text="${totalOrdenes}">0</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat"><div class="text-muted small">Clientes</div><div class="num" th:text="${totalClientes}">0</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat"><div class="text-muted small">Técnicos</div><div class="num" th:text="${totalTecnicos}">0</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat"><div class="text-muted small">Repuestos por reponer</div><div class="num" th:text="${#lists.size(bajoStock)}">0</div></div></div>
+  </div>
+
+  <h2 class="h5 mb-3">Órdenes por estado</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg" th:each="e : ${porEstado}">
+      <div class="card stat">
+        <span class="badge mb-2" th:classappend="${fmt.badge(e.key)}" th:text="${fmt.estado(e.key)}">Estado</span>
+        <div class="num" th:text="${e.value}">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Repuestos con stock bajo</div>
+    <div class="card-body p-0">
+      <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(bajoStock)}">Todos los repuestos están por encima de su stock mínimo.</p>
+      <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(bajoStock)}">
+        <thead><tr><th>Código</th><th>Repuesto</th><th>Stock</th><th>Mínimo</th></tr></thead>
+        <tbody>
+          <tr th:each="r : ${bajoStock}">
+            <td th:text="${r.codigo}">REP</td>
+            <td th:text="${r.nombre}">Nombre</td>
+            <td><span class="badge text-bg-warning" th:text="${r.stock}">0</span></td>
+            <td th:text="${r.stockMinimo}">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+</body>
+</html>

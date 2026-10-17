@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Cliente')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <a th:href="@{/recepcion/clientes}" class="small">&larr; Volver a clientes</a>
+  <h1 class="h3 page-title mt-1" th:text="${cliente.nombre}">Cliente</h1>
+  <p class="text-muted">
+    Documento <span th:text="${cliente.documento}">123</span>
+    · Tel. <span th:text="${cliente.telefono}">300</span>
+  </p>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">Equipos registrados</div>
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(equipos)}">Este cliente aún no tiene equipos. Registra uno con el formulario.</p>
+          <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(equipos)}">
+            <thead><tr><th>Tipo</th><th>Marca y modelo</th><th>Serial</th><th>Falla reportada</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="e : ${equipos}">
+                <td th:text="${e.tipo}">Tipo</td>
+                <td th:text="${#strings.defaultString(e.marca, '') + ' ' + #strings.defaultString(e.modelo, '')}">Marca modelo</td>
+                <td th:text="${e.serial}">Serial</td>
+                <td th:text="${e.descripcionFalla}">Falla</td>
+                <td class="text-end">
+                  <form th:action="@{/recepcion/clientes/{id}/equipos/{eid}/eliminar(id=${cliente.id}, eid=${e.id})}" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este equipo?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Órdenes del cliente</div>
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(ordenes)}">Sin órdenes todavía.</p>
+          <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(ordenes)}">
+            <thead><tr><th>Fecha</th><th>Equipo</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="o : ${ordenes}">
+                <td th:text="${fmt.fecha(o.fechaIngreso)}">Fecha</td>
+                <td th:text="${o.equipoDescripcion}">Equipo</td>
+                <td><span class="badge" th:classappend="${fmt.badge(o.estado)}" th:text="${fmt.estado(o.estado)}">Estado</span></td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" th:href="@{/ordenes/{id}(id=${o.id})}">Ver</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Registrar equipo</div>
+        <div class="card-body">
+          <form th:action="@{/recepcion/clientes/{id}/equipos(id=${cliente.id})}" method="post">
+            <div class="mb-3">
+              <label class="form-label">Tipo de equipo</label>
+              <select name="tipo" class="form-select" required>
+                <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}">Tipo</option>
+              </select>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col"><label class="form-label">Marca</label><input name="marca" class="form-control"></div>
+              <div class="col"><label class="form-label">Modelo</label><input name="modelo" class="form-control"></div>
+            </div>
+            <div class="mb-3"><label class="form-label">Serial</label><input name="serial" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label">Falla reportada</label><textarea name="descripcionFalla" rows="2" class="form-control"></textarea></div>
+            <button type="submit" class="btn btn-brand w-100">Registrar equipo</button>
+          </form>
+        </div>
+      </div>
+      <a class="btn btn-outline-primary w-100 mt-3" th:href="@{/recepcion/ordenes/nueva(clienteId=${cliente.id})}">Crear orden para este cliente</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

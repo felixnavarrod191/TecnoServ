@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Pedidos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <h1 class="h3 page-title mb-4">Pedidos de repuestos</h1>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(pedidos)}">Aún no hay pedidos registrados.</p>
+          <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(pedidos)}">
+            <thead><tr><th>Fecha</th><th>Repuesto</th><th>Cantidad</th><th>Proveedor</th><th>Estado</th><th>Entrega</th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${pedidos}">
+                <td th:text="${fmt.fecha(p.fechaSolicitud)}">Fecha</td>
+                <td class="fw-semibold" th:text="${p.repuestoNombre}">Repuesto</td>
+                <td th:text="${p.cantidad}">0</td>
+                <td th:text="${nombresProveedor[p.proveedorId]}">Proveedor</td>
+                <td><span class="badge" th:classappend="${fmt.badge(p.estado)}" th:text="${p.estado == 'ENTREGADO' ? 'Entregado' : 'Solicitado'}">Estado</span></td>
+                <td th:text="${fmt.fecha(p.fechaEntrega)}">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Nuevo pedido</div>
+        <div class="card-body">
+          <form th:action="@{/admin/pedidos}" method="post">
+            <div class="mb-3">
+              <label class="form-label">Repuesto</label>
+              <select name="repuestoId" class="form-select" required>
+                <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.nombre + ' (stock: ' + r.stock + ')'}">Repuesto</option>
+              </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Cantidad</label><input name="cantidad" type="number" min="1" value="1" class="form-control" required></div>
+            <p class="small text-muted">El pedido se envía al proveedor asignado al repuesto. Cuando el proveedor registre la entrega, el stock aumenta.</p>
+            <button type="submit" class="btn btn-brand w-100">Registrar pedido</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

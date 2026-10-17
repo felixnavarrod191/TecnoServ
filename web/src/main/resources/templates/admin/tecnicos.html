@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Técnicos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <h1 class="h3 page-title mb-4">Técnicos</h1>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(tecnicos)}">Aún no hay técnicos registrados.</p>
+          <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(tecnicos)}">
+            <thead><tr><th>Nombre</th><th>Especialidades</th><th>Tarifa / hora</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="t : ${tecnicos}">
+                <td class="fw-semibold" th:text="${t.nombre}">Nombre</td>
+                <td th:text="${t.especialidades != null ? #strings.listJoin(t.especialidades, ', ') : ''}">Especialidades</td>
+                <td th:text="${fmt.moneda(t.tarifaHora)}">$ 0</td>
+                <td><span class="badge" th:classappend="${t.disponible} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${t.disponible} ? 'Disponible' : 'No disponible'">Estado</span></td>
+                <td class="text-end text-nowrap">
+                  <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/tecnicos(editar=${t.id})}">Editar</a>
+                  <form th:action="@{/admin/tecnicos/{id}/eliminar(id=${t.id})}" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este técnico?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header" th:text="${form.id != null} ? 'Editar técnico' : 'Nuevo técnico'">Nuevo técnico</div>
+        <div class="card-body">
+          <form th:action="@{/admin/tecnicos}" method="post">
+            <input type="hidden" name="id" th:value="${form.id}">
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input name="nombre" class="form-control" th:value="${form.nombre}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Especialidades</label>
+              <div class="form-check" th:each="tipo, st : ${tipos}">
+                <input class="form-check-input" type="checkbox" name="especialidades" th:value="${tipo}" th:id="${'esp-' + st.index}"
+                       th:checked="${form.especialidades != null and form.especialidades.contains(tipo)}">
+                <label class="form-check-label" th:for="${'esp-' + st.index}" th:text="${tipo}">Tipo</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Tarifa por hora (COP)</label>
+              <input name="tarifaHora" type="number" min="0" step="500" class="form-control" th:value="${form.tarifaHora}" required>
+            </div>
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" name="disponible" id="disponible" th:checked="${form.disponible}">
+              <label class="form-check-label" for="disponible">Disponible para recibir órdenes</label>
+            </div>
+            <button type="submit" class="btn btn-brand w-100">Guardar</button>
+            <a th:if="${form.id != null}" class="btn btn-link w-100 mt-1" th:href="@{/admin/tecnicos}">Cancelar edición</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

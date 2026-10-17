@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Error')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-5 text-center">
+  <h1 class="display-5 page-title" th:text="${status}">Error</h1>
+  <p class="lead text-muted" th:text="${status == 403} ? 'No tienes permiso para ver esta página.' : (${status == 404} ? 'La página no existe.' : 'Ocurrió un problema.')">Ocurrió un problema.</p>
+  <a class="btn btn-brand" th:href="@{/}">Volver al inicio</a>
+</main>
+</body>
+</html>

@@ -1,0 +1,31 @@
+server:
+  port: ${PORT:8090}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Cada ruta reenvia al microservicio duenio de ese recurso.
+        # Las URL llegan por variables de entorno (en Render son las URL publicas de cada servicio).
+        - id: clientes-equipos
+          uri: ${CLIENTES_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/clientes/**,/api/equipos/**
+        - id: tecnicos
+          uri: ${TECNICOS_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/tecnicos/**
+        - id: repuestos
+          uri: ${REPUESTOS_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/repuestos/**,/api/proveedores/**,/api/pedidos/**
+        - id: ordenes
+          uri: ${ORDENES_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/ordenes/**
+        - id: reportes
+          uri: ${REPORTES_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/reportes/**

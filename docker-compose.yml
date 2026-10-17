@@ -1,0 +1,73 @@
+# Levanta TODO el sistema en tu computador con un solo comando:
+#     docker compose up --build
+# Luego abre http://localhost:8080  (usuario: admin / clave: admin123)
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  ms-clientes-equipos:
+    build: ./ms-clientes-equipos
+    ports: ["8081:8081"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    depends_on: [mongo]
+
+  ms-tecnicos:
+    build: ./ms-tecnicos
+    ports: ["8082:8082"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    depends_on: [mongo]
+
+  ms-repuestos:
+    build: ./ms-repuestos
+    ports: ["8083:8083"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+    depends_on: [mongo]
+
+  ms-ordenes:
+    build: ./ms-ordenes
+    ports: ["8084:8084"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      CLIENTES_URL: http://ms-clientes-equipos:8081
+      TECNICOS_URL: http://ms-tecnicos:8082
+      REPUESTOS_URL: http://ms-repuestos:8083
+    depends_on: [mongo, ms-clientes-equipos, ms-tecnicos, ms-repuestos]
+
+  ms-reportes:
+    build: ./ms-reportes
+    ports: ["8085:8085"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      ORDENES_URL: http://ms-ordenes:8084
+    depends_on: [mongo, ms-ordenes]
+
+  # Puerta de entrada unica a las APIs: reenvia cada ruta al microservicio dueño del recurso
+  api-gateway:
+    build: ./api-gateway
+    ports: ["8090:8090"]
+    environment:
+      CLIENTES_URL: http://ms-clientes-equipos:8081
+      TECNICOS_URL: http://ms-tecnicos:8082
+      REPUESTOS_URL: http://ms-repuestos:8083
+      ORDENES_URL: http://ms-ordenes:8084
+      REPORTES_URL: http://ms-reportes:8085
+    depends_on: [ms-clientes-equipos, ms-tecnicos, ms-repuestos, ms-ordenes, ms-reportes]
+
+  # Aplicacion web: SOLO habla con el API Gateway
+  web:
+    build: ./web
+    ports: ["8080:8080"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      GATEWAY_URL: http://api-gateway:8090
+    depends_on: [mongo, api-gateway]
+
+volumes:
+  mongo-data:

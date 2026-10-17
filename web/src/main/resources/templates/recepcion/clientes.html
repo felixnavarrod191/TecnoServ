@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Clientes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <h1 class="h3 page-title mb-4">Clientes</h1>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(clientes)}">Aún no hay clientes registrados.</p>
+          <table class="table table-hover mb-0" th:unless="${#lists.isEmpty(clientes)}">
+            <thead><tr><th>Nombre</th><th>Documento</th><th>Teléfono</th><th>Correo</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="c : ${clientes}">
+                <td class="fw-semibold" th:text="${c.nombre}">Nombre</td>
+                <td th:text="${c.documento}">Documento</td>
+                <td th:text="${c.telefono}">Teléfono</td>
+                <td th:text="${c.correo}">correo</td>
+                <td class="text-end text-nowrap">
+                  <a class="btn btn-sm btn-brand" th:href="@{/recepcion/clientes/{id}(id=${c.id})}">Equipos</a>
+                  <a class="btn btn-sm btn-outline-primary" th:href="@{/recepcion/clientes(editar=${c.id})}">Editar</a>
+                  <form th:action="@{/recepcion/clientes/{id}/eliminar(id=${c.id})}" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este cliente?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header" th:text="${form.id != null} ? 'Editar cliente' : 'Nuevo cliente'">Nuevo cliente</div>
+        <div class="card-body">
+          <form th:action="@{/recepcion/clientes}" method="post">
+            <input type="hidden" name="id" th:value="${form.id}">
+            <div class="mb-3"><label class="form-label">Nombre</label><input name="nombre" class="form-control" th:value="${form.nombre}" required></div>
+            <div class="mb-3"><label class="form-label">Documento</label><input name="documento" class="form-control" th:value="${form.documento}" required></div>
+            <div class="mb-3"><label class="form-label">Teléfono</label><input name="telefono" class="form-control" th:value="${form.telefono}"></div>
+            <div class="mb-3"><label class="form-label">Correo</label><input name="correo" type="email" class="form-control" th:value="${form.correo}"></div>
+            <button type="submit" class="btn btn-brand w-100">Guardar</button>
+            <a th:if="${form.id != null}" class="btn btn-link w-100 mt-1" th:href="@{/recepcion/clientes}">Cancelar edición</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

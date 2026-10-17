@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Repuestos y pedidos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <h1 class="h3 page-title mb-4">Repuestos y pedidos</h1>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">Repuestos que suministro</div>
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(repuestos)}">No tienes repuestos asignados.</p>
+          <table class="table mb-0" th:unless="${#lists.isEmpty(repuestos)}">
+            <thead><tr><th>Código</th><th>Repuesto</th><th>Stock</th><th>Mínimo</th><th>Situación</th></tr></thead>
+            <tbody>
+              <tr th:each="r : ${repuestos}">
+                <td th:text="${r.codigo}">REP</td>
+                <td class="fw-semibold" th:text="${r.nombre}">Nombre</td>
+                <td th:text="${r.stock}">0</td>
+                <td th:text="${r.stockMinimo}">0</td>
+                <td><span class="badge" th:classappend="${r.stock le r.stockMinimo} ? 'text-bg-warning' : 'text-bg-success'"
+                          th:text="${r.stock le r.stockMinimo} ? 'El taller necesita reposición' : 'Stock suficiente'">Situación</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Pedidos y entregas</div>
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(pedidos)}">Aún no hay pedidos.</p>
+          <table class="table mb-0" th:unless="${#lists.isEmpty(pedidos)}">
+            <thead><tr><th>Fecha</th><th>Repuesto</th><th>Cantidad</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="p : ${pedidos}">
+                <td th:text="${fmt.fecha(p.fechaSolicitud)}">Fecha</td>
+                <td class="fw-semibold" th:text="${p.repuestoNombre}">Repuesto</td>
+                <td th:text="${p.cantidad}">0</td>
+                <td><span class="badge" th:classappend="${fmt.badge(p.estado)}" th:text="${fmt.estado(p.estado)}">Estado</span></td>
+                <td class="text-end">
+                  <form th:if="${p.estado == 'SOLICITADO'}" th:action="@{/proveedor/pedidos/{id}/entregar(id=${p.id})}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-brand">Registrar entrega</button>
+                  </form>
+                  <span class="small text-muted" th:unless="${p.estado == 'SOLICITADO'}" th:text="${fmt.fecha(p.fechaEntrega)}">Fecha entrega</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">Registrar pedido</div>
+        <div class="card-body">
+          <form th:action="@{/proveedor/pedidos}" method="post">
+            <div class="mb-3">
+              <label class="form-label">Repuesto</label>
+              <select name="repuestoId" class="form-select" required>
+                <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.nombre}">Repuesto</option>
+              </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Cantidad</label><input name="cantidad" type="number" min="1" value="1" class="form-control" required></div>
+            <button type="submit" class="btn btn-brand w-100">Registrar pedido</button>
+          </form>
+          <p class="small text-muted mt-3 mb-0">Cuando entregues el pedido, pulsa «Registrar entrega»: el stock del taller aumenta automáticamente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Orden de servicio')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <a th:href="@{/}" class="small">&larr; Volver a las órdenes</a>
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center my-2 mb-3">
+    <h1 class="h3 page-title mb-0">Orden de servicio</h1>
+    <span class="badge fs-6" th:classappend="${fmt.badge(orden.estado)}" th:text="${fmt.estado(orden.estado)}">Estado</span>
+  </div>
+
+  <div class="row g-4">
+    <!-- Columna izquierda: información de la orden -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">Datos de la orden</div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8" th:text="${orden.clienteNombre}">Cliente</dd>
+            <dt class="col-sm-4">Equipo</dt><dd class="col-sm-8" th:text="${orden.equipoDescripcion}">Equipo</dd>
+            <dt class="col-sm-4">Tipo de reparación</dt><dd class="col-sm-8" th:text="${orden.tipoReparacion}">Tipo</dd>
+            <dt class="col-sm-4">Falla reportada</dt><dd class="col-sm-8" th:text="${orden.fallaReportada}">Falla</dd>
+            <dt class="col-sm-4">Técnico asignado</dt>
+            <dd class="col-sm-8" th:text="${#strings.isEmpty(orden.tecnicoNombre) ? 'Sin asignar' : orden.tecnicoNombre}">Técnico</dd>
+            <dt class="col-sm-4">Fecha de ingreso</dt><dd class="col-sm-8" th:text="${fmt.fecha(orden.fechaIngreso)}">Fecha</dd>
+            <dt class="col-sm-4">Horas trabajadas</dt><dd class="col-sm-8 mb-0" th:text="${orden.horasTrabajadas}">0</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">Diagnósticos</div>
+        <div class="card-body">
+          <p class="text-muted mb-0" th:if="${#lists.isEmpty(diagnosticos)}">Todavía no se ha registrado un diagnóstico.</p>
+          <div class="border-start border-3 ps-3 mb-3" th:each="d : ${diagnosticos}">
+            <div th:text="${d.descripcion}">Descripción</div>
+            <div class="small text-muted" th:text="${d.autor + ' · ' + fmt.fecha(d.fecha)}">Autor · fecha</div>
+            <div class="small" th:if="${d.repuestosRequeridos != null and !#lists.isEmpty(d.repuestosRequeridos)}">
+              Repuestos requeridos: <span th:text="${#strings.listJoin(d.repuestosRequeridos, ', ')}">repuestos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header">Repuestos usados</div>
+        <div class="card-body p-0">
+          <p class="text-muted p-3 mb-0" th:if="${#lists.isEmpty(orden.repuestosUsados)}">No se han usado repuestos.</p>
+          <table class="table mb-0" th:unless="${#lists.isEmpty(orden.repuestosUsados)}">
+            <thead><tr><th>Repuesto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr></thead>
+            <tbody>
+              <tr th:each="r : ${orden.repuestosUsados}">
+                <td th:text="${r.nombre}">Repuesto</td>
+                <td th:text="${r.cantidad}">1</td>
+                <td th:text="${fmt.moneda(r.precioUnitario)}">$ 0</td>
+                <td th:text="${fmt.moneda(r.cantidad * r.precioUnitario)}">$ 0</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">Historial de estados</div>
+        <div class="card-body">
+          <ul class="historial mb-0">
+            <li th:each="h : ${orden.historial}">
+              <div class="fw-semibold" th:text="${fmt.estado(h.estado)}">Estado</div>
+              <div class="small text-muted" th:text="${fmt.fecha(h.fecha) + ' · ' + h.usuario}">Fecha · usuario</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: costo y acciones -->
+    <div class="col-lg-4">
+      <div class="card mb-4" th:if="${costo != null}">
+        <div class="card-header">Costo del servicio</div>
+        <div class="card-body">
+          <div class="d-flex justify-content-between"><span>Mano de obra</span><span th:text="${fmt.moneda(costo.manoObra)}">$ 0</span></div>
+          <div class="d-flex justify-content-between"><span>Repuestos</span><span th:text="${fmt.moneda(costo.costoRepuestos)}">$ 0</span></div>
+          <div class="total-box d-flex justify-content-between fw-bold mt-2"><span>Total</span><span th:text="${fmt.moneda(costo.total)}">$ 0</span></div>
+        </div>
+      </div>
+
+      <!-- Avanzar el estado -->
+      <div class="card mb-4">
+        <div class="card-header">Estado de la orden</div>
+        <div class="card-body">
+          <form th:if="${puedeAvanzar}" th:action="@{/ordenes/{id}/avanzar(id=${orden.id})}" method="post">
+            <button type="submit" class="btn btn-brand w-100" th:text="${'Avanzar a: ' + fmt.estado(siguiente)}">Avanzar</button>
+          </form>
+          <p class="small text-muted mb-0" th:if="${!puedeAvanzar and siguiente != null}"
+             th:text="${siguiente == 'ENTREGADO'} ? 'Solo recepción puede marcar la orden como Entregado.' : 'Solo el técnico asignado puede avanzar la orden.'">Aviso</p>
+          <p class="small text-muted mb-0" th:if="${siguiente == null}">La orden ya fue entregada al cliente.</p>
+        </div>
+      </div>
+
+      <!-- Recepción: asignar técnico -->
+      <div class="card mb-4" th:if="${puedeAsignar}">
+        <div class="card-header">Asignar técnico</div>
+        <div class="card-body">
+          <p class="small text-muted" th:if="${#lists.isEmpty(candidatos)}">No hay técnicos disponibles con la especialidad requerida y con cupo de órdenes.</p>
+          <form th:unless="${#lists.isEmpty(candidatos)}" th:action="@{/ordenes/{id}/asignar(id=${orden.id})}" method="post">
+            <select name="tecnicoId" class="form-select mb-3" required>
+              <option th:each="t : ${candidatos}" th:value="${t.id}" th:text="${t.nombre + ' · ' + fmt.moneda(t.tarifaHora) + '/h'}">Técnico</option>
+            </select>
+            <button type="submit" class="btn btn-outline-primary w-100">Asignar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Técnico: trabajo sobre la orden -->
+      <th:block th:if="${puedeTrabajar}">
+        <div class="card mb-4">
+          <div class="card-header">Registrar diagnóstico</div>
+          <div class="card-body">
+            <form th:action="@{/ordenes/{id}/diagnostico(id=${orden.id})}" method="post">
+              <div class="mb-3"><textarea name="descripcion" rows="3" class="form-control" placeholder="¿Qué falla se encontró?" required></textarea></div>
+              <div class="mb-3"><input name="repuestosRequeridos" class="form-control" placeholder="Repuestos requeridos (separados por coma)"></div>
+              <button type="submit" class="btn btn-outline-primary w-100">Guardar diagnóstico</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">Usar un repuesto</div>
+          <div class="card-body">
+            <form th:action="@{/ordenes/{id}/repuestos(id=${orden.id})}" method="post">
+              <div class="mb-3">
+                <select name="repuestoId" class="form-select" required>
+                  <option th:each="r : ${repuestos}" th:value="${r.id}" th:text="${r.nombre + ' (stock: ' + r.stock + ')'}">Repuesto</option>
+                </select>
+              </div>
+              <div class="mb-3"><input name="cantidad" type="number" min="1" value="1" class="form-control" required></div>
+              <button type="submit" class="btn btn-outline-primary w-100">Asociar a la orden</button>
+              <div class="form-text">Si no hay existencias, la orden pasa a «Esperando repuesto».</div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header">Horas de mano de obra</div>
+          <div class="card-body">
+            <form th:action="@{/ordenes/{id}/horas(id=${orden.id})}" method="post" class="d-flex gap-2">
+              <input name="horas" type="number" min="0" step="0.25" class="form-control" th:value="${orden.horasTrabajadas}" required>
+              <button type="submit" class="btn btn-outline-primary">Guardar</button>
+            </form>
+          </div>
+        </div>
+      </th:block>
+    </div>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Aviso')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-5" style="max-width: 640px">
+  <div class="card">
+    <div class="card-body p-4 text-center">
+      <h1 class="h4 page-title">No se pudo completar la consulta</h1>
+      <p class="text-muted mb-4" th:text="${mensaje}">Mensaje</p>
+      <a class="btn btn-brand" th:href="@{/}">Volver al inicio</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

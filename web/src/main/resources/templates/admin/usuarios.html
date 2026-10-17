@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Usuarios')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="container py-4">
+  <div th:replace="~{fragments/layout :: alertas}"></div>
+  <h1 class="h3 page-title mb-4">Usuarios del sistema</h1>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th></th></tr></thead>
+            <tbody>
+              <tr th:each="u : ${usuarios}">
+                <td class="fw-semibold" th:text="${u.username}">usuario</td>
+                <td th:text="${u.nombre}">Nombre</td>
+                <td><span class="badge text-bg-light border" th:text="${fmt.rol(u.rol)}">Rol</span></td>
+                <td class="text-end">
+                  <form th:action="@{/admin/usuarios/{id}/eliminar(id=${u.id})}" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este usuario?')">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                  </form>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header">Nuevo usuario</div>
+        <div class="card-body">
+          <form th:action="@{/admin/usuarios}" method="post">
+            <div class="mb-3"><label class="form-label">Usuario</label><input name="username" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label">Contraseña</label><input name="password" type="password" class="form-control" minlength="6" required></div>
+            <div class="mb-3"><label class="form-label">Nombre completo</label><input name="nombre" class="form-control" required></div>
+            <div class="mb-3">
+              <label class="form-label">Rol</label>
+              <select name="rol" class="form-select" required>
+                <option th:each="r : ${roles}" th:value="${r}" th:text="${fmt.rol(r)}">Rol</option>
+              </select>
+            </div>
+            <p class="small text-muted mb-2">Según el rol, elige a quién pertenece la cuenta:</p>
+            <div class="mb-2">
+              <label class="form-label small mb-1">Técnico (rol Técnico)</label>
+              <select name="tecnicoId" class="form-select form-select-sm">
+                <option value="">—</option>
+                <option th:each="t : ${tecnicos}" th:value="${t.id}" th:text="${t.nombre}">Técnico</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">Cliente (rol Cliente)</label>
+              <select name="clienteId" class="form-select form-select-sm">
+                <option value="">—</option>
+                <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre}">Cliente</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small mb-1">Proveedor (rol Proveedor)</label>
+              <select name="proveedorId" class="form-select form-select-sm">
+                <option value="">—</option>
+                <option th:each="p : ${proveedores}" th:value="${p.id}" th:text="${p.nombre}">Proveedor</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-brand w-100">Crear usuario</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>
